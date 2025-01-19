@@ -1,5 +1,5 @@
 import logging
-from telegram import Update, ForceReply
+from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 import requests
 import os
@@ -20,7 +20,7 @@ PORT = int(os.getenv("PORT", 8443))
 def escape_markdown_v2(text):
     escape_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
     for char in escape_chars:
-        text = text.replace(char, f"\{char}")
+        text = text.replace(char, f"\\{char}")
     return text
 
 # Function to fetch daily market snapshot from CoinGecko API
@@ -31,46 +31,67 @@ def fetch_daily_snapshot():
         data = response.json()
         market_cap = data['data']['total_market_cap']['usd']
         volume = data['data']['total_volume']['usd']
-        dominance = data['data']['market_cap_percentage']['btc']
+        btc_dominance = data['data']['market_cap_percentage']['btc']
         sentiment = "Neutral (Fear & Greed: 50)"  # Mock sentiment data
         return escape_markdown_v2(f"\U0001F4F0 *Market Snapshot*\n\n" \
                f"• Total Market Cap: ${market_cap:,.2f}\n" \
                f"• 24h Volume: ${volume:,.2f}\n" \
+               f"• BTC Dominance: {btc_dominance:.2f}%\n" \
                f"• Sentiment: {sentiment}")
     else:
         return "Failed to fetch market data. Please try again later."
 
-# Function to fetch winners and losers (mock implementation)
+# Function to fetch winners and losers from CoinGecko API
 def fetch_winners_losers():
-    winners = ["Ethereum (+8.5%)", "Solana (+7.2%)"]
-    losers = ["Dogecoin (-4.1%)", "Shiba Inu (-3.8%)"]
-    return escape_markdown_v2(
-        "\U0001F4C8 *Winners & Losers*\n\n" \
-        "*Winners:*\n" \
-        + "\n".join([f"• {winner}" for winner in winners]) + "\n\n" \
-        "*Losers:*\n" \
-        + "\n".join([f"• {loser}" for loser in losers])
-    )
+    url = "https://api.coingecko.com/api/v3/coins/markets"
+    params = {
+        'vs_currency': 'usd',
+        'order': 'percent_change_24h_desc',
+        'per_page': 5,
+        'page': 1
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        winners = [f"{coin['name']} (+{coin['price_change_percentage_24h']:.2f}%)" for coin in data[:5]]
 
-# Function to fetch weekly market trends (mock implementation)
-def fetch_weekly_trends():
-    return escape_markdown_v2(
-        "\U0001F4CA *Market Trends*\n\n" \
-        "• Market Cap Growth: [график]\n" \
-        "• Sector Dominance: [пироговый график]\n" \
-        "• Top Trading Coins: [бар-чарт]"
-    )
+        params['order'] = 'percent_change_24h_asc'
+        response = requests.get(url, params=params)
+        data = response.json()
+        losers = [f"{coin['name']} ({coin['price_change_percentage_24h']:.2f}%)" for coin in data[:5]]
 
-# Function to fetch important news (mock implementation)
+        return escape_markdown_v2(
+            "\U0001F4C8 *Winners & Losers*\n\n" \
+            "*Winners:*
+" \
+            + "\n".join([f"• {winner}" for winner in winners]) + "\n\n" \
+            "*Losers:*
+" \
+            + "\n".join([f"• {loser}" for loser in losers])
+        )
+    else:
+        return "Failed to fetch winners and losers."
+
+# Function to fetch news from CoinGecko API
 def fetch_news():
-    news = [
-        "Bitcoin ETF Approved, BTC Surges 10%",
-        "Ethereum Completes Upgrade, Gas Fees Drop"
-    ]
-    return escape_markdown_v2(
-        "\U0001F4E2 *News That Matters*\n\n" \
-        + "\n".join([f"• {item}" for item in news])
-    )
+    url = "https://api.coingecko.com/api/v3/status_updates"
+    params = {
+        'per_page': 5,  # Get the latest 5 news items
+        'page': 1
+    }
+    response = requests.get(url, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        news_items = [
+            f"{item['project']['name']}: {item['description']}"
+            for item in data['status_updates'][:5]
+        ]
+        return escape_markdown_v2(
+            "\U0001F4E2 *News That Matters*\n\n" \
+            + "\n".join([f"• {item}" for item in news_items])
+        )
+    else:
+        return "Failed to fetch news. Please try again later."
 
 # Command: Daily report
 async def daily(update: Update, context: CallbackContext) -> None:
@@ -82,8 +103,7 @@ async def daily(update: Update, context: CallbackContext) -> None:
 
 # Command: Weekly report
 async def weekly(update: Update, context: CallbackContext) -> None:
-    trends = fetch_weekly_trends()
-    await update.message.reply_markdown_v2(trends)
+    await update.message.reply_text("Weekly trends are currently unavailable.")
 
 # Command: Start
 async def start(update: Update, context: CallbackContext) -> None:
