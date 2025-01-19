@@ -81,7 +81,7 @@ def fetch_news():
     if response.status_code == 200:
         data = response.json()
         news_items = [
-            f"{item['project']['name']}: {item['description']}"
+            f"{item['project']['name']}: {escape_markdown_v2(item['description'])}"
             for item in data['status_updates'][:5]
         ]
         return escape_markdown_v2(
