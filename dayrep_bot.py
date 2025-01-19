@@ -1,7 +1,6 @@
 import logging
-from telegram import Update, ForceReply
+from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
-import requests
 import os
 
 # Логирование
@@ -11,69 +10,40 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Получаем токен из переменной окружения
-TOKEN = os.getenv("YOUR_BOT_TOKEN")
+# Переменные окружения
+TOKEN = os.getenv("YOUR_BOT_TOKEN")  # Токен бота
+PORT = int(os.environ.get("PORT", 8443))  # Порт для Webhook
+WEBHOOK_URL = f"https://{os.getenv('RENDER_EXTERNAL_URL')}"  # URL твоего сервиса Render
 
-# Функция для экранирования символов
-def escape_markdown(text):
-    return text.replace("-", "\\-").replace(".", "\\.").replace("_", "\\_")
-
-# Функция для получения ежедневного отчёта
-def fetch_daily_snapshot():
-    url = "https://api.coingecko.com/api/v3/global"
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        market_cap = data['data']['total_market_cap']['usd']
-        volume = data['data']['total_volume']['usd']
-        dominance = data['data']['market_cap_percentage']['btc']
-        # Экранируем данные
-        return escape_markdown(
-            f"📈 *Market Snapshot*\n\n"
-            f"Total Market Cap: ${market_cap:,.2f}\n"
-            f"24h Volume: ${volume:,.2f}\n"
-            f"BTC Dominance: {dominance:.2f}%"
-        )
-    else:
-        return "Failed to fetch market data. Please try again later."
-
-# Функция для еженедельного отчёта
-def fetch_weekly_trends():
-    return escape_markdown(
-        "📊 *Weekly Market Trends*\n\n"
-        "- BTC: +5.2%\n"
-        "- ETH: +7.1%\n"
-        "- Total Market Cap Growth: +4.8%\n"
-    )
-
-# Команда /start
+# Функции бота
 async def start(update: Update, context: CallbackContext) -> None:
-    user = update.effective_user
-    await update.message.reply_markdown_v2(
-        f"Hello, {user.mention_markdown_v2()}\\! \\n"
-        f"I'm Dayrep, your daily crypto market report bot\\. \\n"
-        "Use /daily to get today's market snapshot or /weekly for weekly trends\\."
-    )
+    """Приветственное сообщение."""
+    await update.message.reply_text("Привет! Я ваш Telegram-бот для криптоотчётов.")
 
-# Команда /daily
 async def daily(update: Update, context: CallbackContext) -> None:
-    report = fetch_daily_snapshot()
-    await update.message.reply_markdown_v2(report)
+    """Ежедневный отчёт."""
+    await update.message.reply_text("Ежедневный отчёт пока пуст.")
 
-# Команда /weekly
 async def weekly(update: Update, context: CallbackContext) -> None:
-    report = fetch_weekly_trends()
-    await update.message.reply_markdown_v2(report)
+    """Еженедельный отчёт."""
+    await update.message.reply_text("Еженедельный отчёт пока пуст.")
 
 # Основная функция
 def main():
+    # Создаём приложение
     application = Application.builder().token(TOKEN).build()
 
+    # Регистрируем команды
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("daily", daily))
     application.add_handler(CommandHandler("weekly", weekly))
 
-    application.run_polling()
+    # Настройка Webhook
+    application.run_webhook(
+        listen="0.0.0.0",  # Слушаем на всех интерфейсах
+        port=PORT,  # Указываем порт
+        webhook_url=WEBHOOK_URL  # Полный URL Webhook
+    )
 
 if __name__ == "__main__":
     main()
