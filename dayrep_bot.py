@@ -108,9 +108,9 @@ async def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     await update.message.reply_markdown_v2(
         escape_markdown_v2(
-            f"Hello, {user.mention_markdown_v2()}\! \n"
-            f"I'm Dayrep, your daily crypto market report bot\. \n"
-            "Use /daily to get today's market snapshot or /weekly for weekly trends\."
+            f"Hello, {user.mention_markdown_v2()} \n"
+            f"I'm Dayrep, your daily crypto market report bot \n"
+            "Use /daily to get today's market snapshot or /weekly for weekly trends"
         )
     )
 
