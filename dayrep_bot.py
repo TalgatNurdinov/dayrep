@@ -20,7 +20,7 @@ PORT = int(os.getenv("PORT", 8443))
 def escape_markdown_v2(text):
     escape_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
     for char in escape_chars:
-        text = text.replace(char, f"\\{char}")
+        text = text.replace(char, f"\{char}")
     return text
 
 # Function to fetch daily market snapshot from CoinGecko API
@@ -32,20 +32,58 @@ def fetch_daily_snapshot():
         market_cap = data['data']['total_market_cap']['usd']
         volume = data['data']['total_volume']['usd']
         dominance = data['data']['market_cap_percentage']['btc']
-        return escape_markdown_v2(f"\U0001F4C8 *Market Snapshot*\n\n" \
-               f"Total Market Cap: ${market_cap:,.2f}\n" \
-               f"24h Volume: ${volume:,.2f}\n" \
-               f"BTC Dominance: {dominance:.2f}%")
+        sentiment = "Neutral (Fear & Greed: 50)"  # Mock sentiment data
+        return escape_markdown_v2(f"\U0001F4F0 *Market Snapshot*\n\n" \
+               f"• Total Market Cap: ${market_cap:,.2f}\n" \
+               f"• 24h Volume: ${volume:,.2f}\n" \
+               f"• Sentiment: {sentiment}")
     else:
         return "Failed to fetch market data. Please try again later."
 
+# Function to fetch winners and losers (mock implementation)
+def fetch_winners_losers():
+    winners = ["Ethereum (+8.5%)", "Solana (+7.2%)"]
+    losers = ["Dogecoin (-4.1%)", "Shiba Inu (-3.8%)"]
+    return escape_markdown_v2(
+        "\U0001F4C8 *Winners & Losers*\n\n" \
+        "*Winners:*\n" \
+        + "\n".join([f"• {winner}" for winner in winners]) + "\n\n" \
+        "*Losers:*\n" \
+        + "\n".join([f"• {loser}" for loser in losers])
+    )
+
 # Function to fetch weekly market trends (mock implementation)
 def fetch_weekly_trends():
-    # Placeholder for weekly data
-    return escape_markdown_v2("\U0001F4CA *Weekly Market Trends*\n\n" \
-            "- BTC: +5.2%\n" \
-            "- ETH: +7.1%\n" \
-            "- Total Market Cap Growth: +4.8%\n")
+    return escape_markdown_v2(
+        "\U0001F4CA *Market Trends*\n\n" \
+        "• Market Cap Growth: [график]\n" \
+        "• Sector Dominance: [пироговый график]\n" \
+        "• Top Trading Coins: [бар-чарт]"
+    )
+
+# Function to fetch important news (mock implementation)
+def fetch_news():
+    news = [
+        "Bitcoin ETF Approved, BTC Surges 10%",
+        "Ethereum Completes Upgrade, Gas Fees Drop"
+    ]
+    return escape_markdown_v2(
+        "\U0001F4E2 *News That Matters*\n\n" \
+        + "\n".join([f"• {item}" for item in news])
+    )
+
+# Command: Daily report
+async def daily(update: Update, context: CallbackContext) -> None:
+    snapshot = fetch_daily_snapshot()
+    winners_losers = fetch_winners_losers()
+    news = fetch_news()
+    report = f"{snapshot}\n\n{winners_losers}\n\n{news}"
+    await update.message.reply_markdown_v2(report)
+
+# Command: Weekly report
+async def weekly(update: Update, context: CallbackContext) -> None:
+    trends = fetch_weekly_trends()
+    await update.message.reply_markdown_v2(trends)
 
 # Command: Start
 async def start(update: Update, context: CallbackContext) -> None:
@@ -57,16 +95,6 @@ async def start(update: Update, context: CallbackContext) -> None:
             "Use /daily to get today's market snapshot or /weekly for weekly trends\."
         )
     )
-
-# Command: Daily report
-async def daily(update: Update, context: CallbackContext) -> None:
-    report = fetch_daily_snapshot()
-    await update.message.reply_markdown_v2(report)
-
-# Command: Weekly report
-async def weekly(update: Update, context: CallbackContext) -> None:
-    report = fetch_weekly_trends()
-    await update.message.reply_markdown_v2(report)
 
 # Main function
 def main():
