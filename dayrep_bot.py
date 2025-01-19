@@ -1,6 +1,6 @@
 import logging
 from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
 import requests
 from datetime import datetime, timedelta
 
@@ -23,7 +23,7 @@ def fetch_daily_snapshot():
         market_cap = data['data']['total_market_cap']['usd']
         volume = data['data']['total_volume']['usd']
         dominance = data['data']['market_cap_percentage']['btc']
-        return f"\U0001F4C8 *Market Snapshot*\n\n" \
+        return f"📈 *Market Snapshot*\n\n" \
                f"Total Market Cap: ${market_cap:,.2f}\n" \
                f"24h Volume: ${volume:,.2f}\n" \
                f"BTC Dominance: {dominance:.2f}%"
@@ -33,18 +33,18 @@ def fetch_daily_snapshot():
 # Function to fetch weekly market trends (mock implementation)
 def fetch_weekly_trends():
     # Placeholder for weekly data
-    return ("\U0001F4CA *Weekly Market Trends*\n\n" \
-            "- BTC: +5.2%\n" \
-            "- ETH: +7.1%\n" \
+    return ("📊 *Weekly Market Trends*\n\n"
+            "- BTC: +5.2%\n"
+            "- ETH: +7.1%\n"
             "- Total Market Cap Growth: +4.8%\n")
 
 # Command: Start
 def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     update.message.reply_markdown_v2(
-        f"Hello, {user.mention_markdown_v2()}\! \n"
-        f"I'm Dayrep, your daily crypto market report bot\. \n"
-        "Use /daily to get today's market snapshot or /weekly for weekly trends\."
+        f"Hello, {user.mention_markdown_v2()}\\! \\n"
+        f"I'm Dayrep, your daily crypto market report bot\\. \\n"
+        "Use /daily to get today's market snapshot or /weekly for weekly trends\\."
     )
 
 # Command: Daily report
