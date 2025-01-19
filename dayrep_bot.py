@@ -39,7 +39,7 @@ def fetch_daily_snapshot():
                f"• BTC Dominance: {btc_dominance:.2f}%\n" \
                f"• Sentiment: {sentiment}")
     else:
-        return "Failed to fetch market data. Please try again later."
+        return escape_markdown_v2("Failed to fetch market data. Please try again later.")
 
 # Function to fetch winners and losers from CoinGecko API
 def fetch_winners_losers():
@@ -68,7 +68,7 @@ def fetch_winners_losers():
             + "\n".join([f"• {loser}" for loser in losers])
         )
     else:
-        return "Failed to fetch winners and losers."
+        return escape_markdown_v2("Failed to fetch winners and losers.")
 
 # Function to fetch news from CoinGecko API
 def fetch_news():
@@ -89,7 +89,7 @@ def fetch_news():
             + "\n".join([f"• {item}" for item in news_items])
         )
     else:
-        return "Failed to fetch news. Please try again later."
+        return escape_markdown_v2("Failed to fetch news. Please try again later.")
 
 # Command: Daily report
 async def daily(update: Update, context: CallbackContext) -> None:
@@ -97,7 +97,7 @@ async def daily(update: Update, context: CallbackContext) -> None:
     winners_losers = fetch_winners_losers()
     news = fetch_news()
     report = f"{snapshot}\n\n{winners_losers}\n\n{news}"
-    await update.message.reply_markdown_v2(report)
+    await update.message.reply_markdown_v2(escape_markdown_v2(report))
 
 # Command: Weekly report
 async def weekly(update: Update, context: CallbackContext) -> None:
@@ -108,9 +108,9 @@ async def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     await update.message.reply_markdown_v2(
         escape_markdown_v2(
-            f"Hello, {user.mention_markdown_v2()} \n"
-            f"I'm Dayrep, your daily crypto market report bot \n"
-            "Use /daily to get today's market snapshot or /weekly for weekly trends"
+            f"Hello, {user.mention_markdown_v2()}\! \n"
+            f"I'm Dayrep, your daily crypto market report bot\. \n"
+            "Use /daily to get today's market snapshot or /weekly for weekly trends\."
         )
     )
 
