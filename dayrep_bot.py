@@ -1,12 +1,11 @@
 import logging
 from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, CallbackContext
 import requests
-from datetime import datetime, timedelta
 
 # Enable logging
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -39,48 +38,36 @@ def fetch_weekly_trends():
             "- Total Market Cap Growth: +4.8%\n")
 
 # Command: Start
-def start(update: Update, context: CallbackContext) -> None:
+async def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
-    update.message.reply_markdown_v2(
+    await update.message.reply_markdown_v2(
         f"Hello, {user.mention_markdown_v2()}\\! \\n"
         f"I'm Dayrep, your daily crypto market report bot\\. \\n"
         "Use /daily to get today's market snapshot or /weekly for weekly trends\\."
     )
 
 # Command: Daily report
-def daily(update: Update, context: CallbackContext) -> None:
+async def daily(update: Update, context: CallbackContext) -> None:
     report = fetch_daily_snapshot()
-    update.message.reply_markdown_v2(report, parse_mode='Markdown')
+    await update.message.reply_markdown_v2(report)
 
 # Command: Weekly report
-def weekly(update: Update, context: CallbackContext) -> None:
+async def weekly(update: Update, context: CallbackContext) -> None:
     report = fetch_weekly_trends()
-    update.message.reply_markdown_v2(report, parse_mode='Markdown')
-
-# Error handler
-def error(update: Update, context: CallbackContext) -> None:
-    logger.warning('Update "%s" caused error "%s"', update, context.error)
+    await update.message.reply_markdown_v2(report)
 
 # Main function
 def main():
-    updater = Updater(TOKEN)
-
-    # Get the dispatcher to register handlers
-    dispatcher = updater.dispatcher
+    # Create the Application
+    application = Application.builder().token(TOKEN).build()
 
     # Commands
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("daily", daily))
-    dispatcher.add_handler(CommandHandler("weekly", weekly))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("daily", daily))
+    application.add_handler(CommandHandler("weekly", weekly))
 
-    # Log all errors
-    dispatcher.add_error_handler(error)
+    # Run the bot
+    application.run_polling()
 
-    # Start the Bot
-    updater.start_polling()
-
-    # Run the bot until you press Ctrl-C
-    updater.idle()
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
