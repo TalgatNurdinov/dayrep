@@ -2,16 +2,19 @@ import logging
 from telegram import Update, ForceReply
 from telegram.ext import Application, CommandHandler, CallbackContext
 import requests
+import os  # Импортируем os для работы с переменными окружения
 
-# Enable logging
+# Получаем токен из переменной окружения
+TOKEN = os.getenv("YOUR_BOT_TOKEN")
+
+# Настройка логирования
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Your bot token from BotFather
-TOKEN = "YOUR_BOT_TOKEN"
+
 
 # Function to fetch daily market snapshot from CoinGecko API
 def fetch_daily_snapshot():
