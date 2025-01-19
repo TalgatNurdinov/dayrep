@@ -62,11 +62,9 @@ def fetch_winners_losers():
 
         return escape_markdown_v2(
             "\U0001F4C8 *Winners & Losers*\n\n" \
-            "*Winners:*
-" \
+            "*Winners:*\n" \
             + "\n".join([f"• {winner}" for winner in winners]) + "\n\n" \
-            "*Losers:*
-" \
+            "*Losers:*\n" \
             + "\n".join([f"• {loser}" for loser in losers])
         )
     else:
