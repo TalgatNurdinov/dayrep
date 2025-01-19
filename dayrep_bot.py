@@ -53,14 +53,14 @@ def fetch_winners_losers():
     response = requests.get(url, params=params)
     if response.status_code == 200:
         data = response.json()
-        winners = [f"{coin['name']} (+{coin['price_change_percentage_24h']:.2f}%)" for coin in data[:5]]
+        winners = [escape_markdown_v2(f"{coin['name']} (+{coin['price_change_percentage_24h']:.2f}%)") for coin in data[:5]]
 
         params['order'] = 'percent_change_24h_asc'
         response = requests.get(url, params=params)
         data = response.json()
-        losers = [f"{coin['name']} ({coin['price_change_percentage_24h']:.2f}%)" for coin in data[:5]]
+        losers = [escape_markdown_v2(f"{coin['name']} ({coin['price_change_percentage_24h']:.2f}%)") for coin in data[:5]]
 
-        return escape_markdown_v2(
+        return (
             "\U0001F4C8 *Winners & Losers*\n\n" \
             "*Winners:*\n" \
             + "\n".join([f"• {winner}" for winner in winners]) + "\n\n" \
