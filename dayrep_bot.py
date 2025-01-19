@@ -81,10 +81,10 @@ def fetch_news():
     if response.status_code == 200:
         data = response.json()
         news_items = [
-            f"{item['project']['name']}: {escape_markdown_v2(item['description'])}"
+            escape_markdown_v2(f"{item['project']['name']}: {item['description']}")
             for item in data['status_updates'][:5]
         ]
-        return escape_markdown_v2(
+        return (
             "\U0001F4E2 *News That Matters*\n\n" \
             + "\n".join([f"• {item}" for item in news_items])
         )
