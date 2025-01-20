@@ -3,6 +3,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 import requests
 import os
+from html import escape
 
 # Enable logging
 logging.basicConfig(
@@ -16,14 +17,7 @@ TOKEN = os.getenv("YOUR_BOT_TOKEN")
 WEBHOOK_URL = "https://dayrep-bot.onrender.com"
 PORT = int(os.getenv("PORT", 8443))
 
-# Function to escape Markdown V2 special characters
-def escape_markdown_v2(text):
-    escape_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
-    for char in escape_chars:
-        text = text.replace(char, f"\\{char}")
-    return text
-
-# Function to fetch daily market snapshot from CoinGecko API
+# Function to fetch daily market snapshot with HTML formatting
 def fetch_daily_snapshot():
     url = "https://api.coingecko.com/api/v3/global"
     response = requests.get(url)
@@ -32,16 +26,18 @@ def fetch_daily_snapshot():
         market_cap = data['data']['total_market_cap']['usd']
         volume = data['data']['total_volume']['usd']
         btc_dominance = data['data']['market_cap_percentage']['btc']
-        sentiment = "Neutral (Fear & Greed: 50)"  # Mock sentiment data
-        return escape_markdown_v2(f"\U0001F4F0 *Market Snapshot*\n\n" \
-               f"• Total Market Cap: ${market_cap:,.2f}\n" \
-               f"• 24h Volume: ${volume:,.2f}\n" \
-               f"• BTC Dominance: {btc_dominance:.2f}%\n" \
-               f"• Sentiment: {sentiment}")
+        sentiment = "Neutral (Fear & Greed: 50)"  # Example data
+        return (
+            f"📈 <b>Market Snapshot</b><br><br>"
+            f"• Total Market Cap: ${market_cap:,.2f}<br>"
+            f"• 24h Volume: ${volume:,.2f}<br>"
+            f"• BTC Dominance: {btc_dominance:.2f}%<br>"
+            f"• Sentiment: {sentiment}"
+        )
     else:
-        return escape_markdown_v2("Failed to fetch market data. Please try again later.")
+        return "Failed to fetch market data. Please try again later."
 
-# Function to fetch winners and losers from CoinGecko API
+# Function to fetch winners and losers from CoinGecko API with HTML formatting
 def fetch_winners_losers():
     url = "https://api.coingecko.com/api/v3/coins/markets"
     params = {
@@ -53,24 +49,24 @@ def fetch_winners_losers():
     response = requests.get(url, params=params)
     if response.status_code == 200:
         data = response.json()
-        winners = [escape_markdown_v2(f"{coin['name']} (+{coin['price_change_percentage_24h']:.2f}%)") for coin in data[:5]]
+        winners = [escape(f"{coin['name']} (+{coin['price_change_percentage_24h']:.2f}%)") for coin in data[:5]]
 
         params['order'] = 'percent_change_24h_asc'
         response = requests.get(url, params=params)
         data = response.json()
-        losers = [escape_markdown_v2(f"{coin['name']} ({coin['price_change_percentage_24h']:.2f}%)") for coin in data[:5]]
+        losers = [escape(f"{coin['name']} ({coin['price_change_percentage_24h']:.2f}%)") for coin in data[:5]]
 
         return (
-            "\U0001F4C8 *Winners & Losers*\n\n" \
-            "*Winners:*\n" \
-            + "\n".join([f"• {winner}" for winner in winners]) + "\n\n" \
-            "*Losers:*\n" \
-            + "\n".join([f"• {loser}" for loser in losers])
+            "📊 <b>Winners & Losers</b><br><br>"
+            "<b>Winners:</b><br>"
+            + "<br>".join([f"• {winner}" for winner in winners]) + "<br><br>"
+            "<b>Losers:</b><br>"
+            + "<br>".join([f"• {loser}" for loser in losers])
         )
     else:
-        return escape_markdown_v2("Failed to fetch winners and losers.")
+        return "Failed to fetch winners and losers."
 
-# Function to fetch news from CoinGecko API
+# Function to fetch news from CoinGecko API with HTML formatting
 def fetch_news():
     url = "https://api.coingecko.com/api/v3/status_updates"
     params = {
@@ -81,24 +77,24 @@ def fetch_news():
     if response.status_code == 200:
         data = response.json()
         news_items = [
-            escape_markdown_v2(f"{item['project']['name']}: {item['description']}")
+            escape(f"{item['project']['name']}: {item['description']}")
             for item in data['status_updates'][:5]
         ]
         return (
-            "\U0001F4E2 *News That Matters*\n\n" \
-            + "\n".join([f"• {item}" for item in news_items])
+            "🗞️ <b>News That Matters</b><br><br>"
+            + "<br>".join([f"• {item}" for item in news_items])
         )
     else:
-        return escape_markdown_v2("Failed to fetch news. Please try again later.")
+        return "Failed to fetch news. Please try again later."
 
-# Command: Daily report
+# Command: Daily report with HTML formatting
 async def daily(update: Update, context: CallbackContext) -> None:
     try:
         snapshot = fetch_daily_snapshot()
         winners_losers = fetch_winners_losers()
         news = fetch_news()
-        report = f"{snapshot}\n\n{winners_losers}\n\n{news}"
-        await update.message.reply_markdown_v2(report)
+        report = f"{snapshot}<br><br>{winners_losers}<br><br>{news}"
+        await update.message.reply_text(report, parse_mode='HTML')
     except Exception as e:
         logger.error(f"Error in /daily: {e}")
         await update.message.reply_text("An error occurred while generating the report. Please try again later.")
@@ -110,12 +106,11 @@ async def weekly(update: Update, context: CallbackContext) -> None:
 # Command: Start
 async def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
-    await update.message.reply_markdown_v2(
-        escape_markdown_v2(
-            f"Hello, {user.mention_markdown_v2()}\! \n"
-            f"I'm Dayrep, your daily crypto market report bot\. \n"
-            "Use /daily to get today's market snapshot or /weekly for weekly trends\."
-        )
+    await update.message.reply_text(
+        f"Hello, <b>{escape(user.full_name)}</b>!<br>"
+        f"I'm Dayrep, your daily crypto market report bot.<br>"
+        "Use /daily to get today's market snapshot or /weekly for weekly trends.",
+        parse_mode='HTML'
     )
 
 # Main function
