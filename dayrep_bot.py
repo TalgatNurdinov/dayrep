@@ -93,11 +93,15 @@ def fetch_news():
 
 # Command: Daily report
 async def daily(update: Update, context: CallbackContext) -> None:
-    snapshot = fetch_daily_snapshot()
-    winners_losers = fetch_winners_losers()
-    news = fetch_news()
-    report = f"{snapshot}\n\n{winners_losers}\n\n{news}"
-    await update.message.reply_markdown_v2(escape_markdown_v2(report))
+    try:
+        snapshot = fetch_daily_snapshot()
+        winners_losers = fetch_winners_losers()
+        news = fetch_news()
+        report = f"{snapshot}\n\n{winners_losers}\n\n{news}"
+        await update.message.reply_markdown_v2(report)
+    except Exception as e:
+        logger.error(f"Error in /daily: {e}")
+        await update.message.reply_text("An error occurred while generating the report. Please try again later.")
 
 # Command: Weekly report
 async def weekly(update: Update, context: CallbackContext) -> None:
