@@ -18,6 +18,7 @@ WEBHOOK_URL = "https://dayrep-bot.onrender.com"
 PORT = int(os.getenv("PORT", 8443))
 
 # Function to fetch daily market snapshot with HTML formatting
+
 def fetch_daily_snapshot():
     url = "https://api.coingecko.com/api/v3/global"
     response = requests.get(url)
@@ -28,16 +29,17 @@ def fetch_daily_snapshot():
         btc_dominance = data['data']['market_cap_percentage']['btc']
         sentiment = "Neutral (Fear & Greed: 50)"  # Example data
         return (
-            f"📈 <b>Market Snapshot</b><br><br>"
-            f"• Total Market Cap: ${market_cap:,.2f}<br>"
-            f"• 24h Volume: ${volume:,.2f}<br>"
-            f"• BTC Dominance: {btc_dominance:.2f}%<br>"
+            f"📈 <b>Market Snapshot</b>\n\n"
+            f"• Total Market Cap: ${market_cap:,.2f}\n"
+            f"• 24h Volume: ${volume:,.2f}\n"
+            f"• BTC Dominance: {btc_dominance:.2f}%\n"
             f"• Sentiment: {sentiment}"
         )
     else:
         return "Failed to fetch market data. Please try again later."
 
 # Function to fetch winners and losers from CoinGecko API with HTML formatting
+
 def fetch_winners_losers():
     url = "https://api.coingecko.com/api/v3/coins/markets"
     params = {
@@ -57,16 +59,17 @@ def fetch_winners_losers():
         losers = [escape(f"{coin['name']} ({coin['price_change_percentage_24h']:.2f}%)") for coin in data[:5]]
 
         return (
-            "📊 <b>Winners & Losers</b><br><br>"
-            "<b>Winners:</b><br>"
-            + "<br>".join([f"• {winner}" for winner in winners]) + "<br><br>"
-            "<b>Losers:</b><br>"
-            + "<br>".join([f"• {loser}" for loser in losers])
+            "📊 <b>Winners & Losers</b>\n\n"
+            "<b>Winners:</b>\n"
+            + "\n".join([f"• {winner}" for winner in winners]) + "\n\n"
+            "<b>Losers:</b>\n"
+            + "\n".join([f"• {loser}" for loser in losers])
         )
     else:
         return "Failed to fetch winners and losers."
 
 # Function to fetch news from CoinGecko API with HTML formatting
+
 def fetch_news():
     url = "https://api.coingecko.com/api/v3/status_updates"
     params = {
@@ -81,8 +84,8 @@ def fetch_news():
             for item in data['status_updates'][:5]
         ]
         return (
-            "🗞️ <b>News That Matters</b><br><br>"
-            + "<br>".join([f"• {item}" for item in news_items])
+            "🗞️ <b>News That Matters</b>\n\n"
+            + "\n".join([f"• {item}" for item in news_items])
         )
     else:
         return "Failed to fetch news. Please try again later."
@@ -93,7 +96,7 @@ async def daily(update: Update, context: CallbackContext) -> None:
         snapshot = fetch_daily_snapshot()
         winners_losers = fetch_winners_losers()
         news = fetch_news()
-        report = f"{snapshot}<br><br>{winners_losers}<br><br>{news}"
+        report = f"{snapshot}\n\n{winners_losers}\n\n{news}"
         await update.message.reply_text(report, parse_mode='HTML')
     except Exception as e:
         logger.error(f"Error in /daily: {e}")
@@ -107,8 +110,8 @@ async def weekly(update: Update, context: CallbackContext) -> None:
 async def start(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
     await update.message.reply_text(
-        f"Hello, <b>{escape(user.full_name)}</b>!<br>"
-        f"I'm Dayrep, your daily crypto market report bot.<br>"
+        f"Hello, <b>{escape(user.full_name)}</b>!\n"
+        f"I'm Dayrep, your daily crypto market report bot.\n"
         "Use /daily to get today's market snapshot or /weekly for weekly trends.",
         parse_mode='HTML'
     )
